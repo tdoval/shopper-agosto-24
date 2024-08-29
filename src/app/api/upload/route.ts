@@ -1,49 +1,84 @@
 import { NextResponse } from "next/server";
-import { writeFile } from "fs/promises";
-import { join } from "path";
 import { v4 as uuidv4 } from "uuid";
-
-async function saveImageLocally(fileBuffer: Buffer, originalFileName: string) {
-  const uploadDir = join(process.cwd(), "public", "uploads");
-  const fileName = `${uuidv4()}-${originalFileName}`;
-  const filePath = join(uploadDir, fileName);
-
-  await writeFile(filePath, fileBuffer);
-
-  return fileName;
-}
+import prisma from "@/lib/prisma";
+import { isValidBase64Image } from "@/lib/validators";
+import { findCustomerById, fetchGoogleGemini } from "@/lib/actions";
 
 export async function POST(req: Request) {
-  const formData = await req.formData();
-  const imageFile = formData.get("image") as File;
+  console.log("Recebendo solicitação de POST para /api/upload");
 
-  if (!imageFile) {
+  const body = await req.json();
+  const { image, customerId, measure_datetime, measure_type } = body;
+
+  console.log("Dados recebidos:", {
+    image,
+    customerId,
+    measure_datetime,
+    measure_type,
+  });
+
+  if (
+    !isValidBase64Image(image) ||
+    !customerId ||
+    !measure_datetime ||
+    !measure_type
+  ) {
+    console.log("Dados inválidos fornecidos.");
     return NextResponse.json(
       {
         error_code: "INVALID_DATA",
-        error_description: "Imagem não fornecida.",
+        error_description: "Dados fornecidos são inválidos",
       },
       { status: 400 },
     );
   }
 
-  try {
-    const arrayBuffer = await imageFile.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const savedImageName = await saveImageLocally(buffer, imageFile.name);
-
-    return NextResponse.json({
-      imageUrl: `/uploads/${savedImageName}`,
-    });
-  } catch (error) {
-    console.error("Erro ao processar a imagem:", error);
+  let customer_code = "";
+  console.log("Validando cliente...");
+  const { customer, error, status } = await findCustomerById(customerId);
+  if (error || !customer) {
+    console.log("Cliente não encontrado:", customerId);
     return NextResponse.json(
       {
-        error_code: "SERVER_ERROR",
-        error_description: "Erro interno ao processar a imagem.",
+        error_code: error,
+        error_description: "Cliente não encontrado",
       },
-      { status: 500 },
+      { status: status },
     );
   }
+  customer_code = customer.customer_code;
+
+  console.log("Enviando imagem para o Google Gemini...");
+  const geminiData = {
+    imageBase64: image,
+    customer_code,
+    measure_datetime,
+    measure_type,
+  };
+
+  const measureValue = await fetchGoogleGemini(geminiData);
+  console.log("Valor da medição obtido:", measureValue);
+
+  const measureUUID = uuidv4();
+  console.log("Salvando leitura no banco de dados...");
+
+  await prisma.measure.create({
+    data: {
+      id: measureUUID,
+      measure_uuid: measureUUID,
+      customerId: customer.id,
+      measure_datetime: new Date(measure_datetime),
+      measure_type,
+      measure_value: 1234,
+      image_url: "/path/to/saved/image", // Ajuste conforme necessário
+      has_confirmed: false,
+    },
+  });
+
+  console.log("Leitura salva com sucesso. Enviando resposta...");
+  return NextResponse.json({
+    image_url: "/path/to/saved/image", // Ajuste conforme necessário
+    measure_value: 1234,
+    measure_uuid: measureUUID,
+  });
 }

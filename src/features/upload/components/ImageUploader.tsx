@@ -1,26 +1,22 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 
 interface ImageUploaderProps {
-  onUploadComplete: (data: {
-    imageUrl: string;
-    measureValue: number;
-    measureUuid: string;
-  }) => void;
+  onUploadComplete: (data: { base64Image: string }) => void;
 }
 
 export default function ImageUploader({
   onUploadComplete,
 }: ImageUploaderProps) {
-  const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) return;
 
@@ -29,22 +25,12 @@ export default function ImageUploader({
       return;
     }
 
-    setFile(selectedFile);
-    setError(null);
-  };
-
-  const handleUpload = async () => {
-    if (!file) {
-      setError("Por favor, selecione uma imagem antes de enviar.");
-      return;
-    }
-
     setLoading(true);
     const formData = new FormData();
-    formData.append("image", file);
+    formData.append("image", selectedFile);
 
     try {
-      const response = await fetch("/api/upload", {
+      const response = await fetch("/api/upload/images", {
         method: "POST",
         body: formData,
       });
@@ -81,14 +67,6 @@ export default function ImageUploader({
         id="image-upload"
       />
       {error && <p className="text-red-500 mt-2">{error}</p>}
-
-      <Button
-        onClick={handleUpload}
-        className="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-        disabled={loading}
-      >
-        {loading ? "Enviando..." : "Converter e Enviar"}
-      </Button>
     </div>
   );
 }
