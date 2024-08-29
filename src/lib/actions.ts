@@ -1,7 +1,8 @@
 import prisma from "@/lib/prisma";
+import { startOfMonth, endOfMonth } from "date-fns";
 
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
-import { fetchGoogleGeminiProps } from "./types";
+import { fetchGoogleGeminiProps, MeasureType } from "./types";
 
 export async function fetchGoogleGemini(data: fetchGoogleGeminiProps) {
   const { imageBase64, measure_type } = data;
@@ -73,5 +74,32 @@ export async function findCustomerById(customer_id: string) {
       error: "SERVER_ERROR",
       status: 500,
     };
+  }
+}
+
+export async function getCurrentMonthReading(
+  customerId: string,
+  measure_datetime: Date,
+  measure_type: MeasureType,
+) {
+  const startDate = startOfMonth(measure_datetime);
+  const endDate = endOfMonth(measure_datetime);
+
+  try {
+    const existingReading = await prisma.measure.findFirst({
+      where: {
+        customerId: customerId,
+        measure_type: measure_type,
+        measure_datetime: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+    });
+
+    return existingReading;
+  } catch (error) {
+    console.error("Erro ao verificar leitura existente:", error);
+    return null;
   }
 }
