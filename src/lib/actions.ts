@@ -103,3 +103,52 @@ export async function getCurrentMonthReading(
     return null;
   }
 }
+
+export async function confirmOrCorrectMeasure(
+  measure_uuid: string,
+  new_value: number,
+) {
+  try {
+    const measure = await prisma.measure.findUnique({
+      where: { measure_uuid },
+    });
+
+    if (!measure) {
+      return {
+        success: false,
+        status: 404,
+        error_code: "MEASURE_NOT_FOUND",
+        error_description: "Leitura não encontrada",
+      };
+    }
+
+    if (measure.has_confirmed) {
+      return {
+        success: false,
+        status: 409,
+        error_code: "CONFIRMATION_DUPLICATE",
+        error_description: "Leitura já confirmada",
+      };
+    }
+
+    const isValueChanged = measure.measure_value !== new_value;
+
+    await prisma.measure.update({
+      where: { measure_uuid },
+      data: {
+        measure_value: new_value,
+        has_confirmed: true,
+      },
+    });
+
+    return { success: true, status: 200, isValueChanged };
+  } catch (error) {
+    console.error("Erro ao confirmar ou corrigir leitura:", error);
+    return {
+      success: false,
+      status: 500,
+      error_code: "SERVER_ERROR",
+      error_description: "Erro ao confirmar ou corrigir leitura",
+    };
+  }
+}
