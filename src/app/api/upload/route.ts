@@ -9,10 +9,9 @@ import {
 } from "@/lib/actions";
 
 export async function POST(req: Request) {
-  console.log("Recebendo solicitação de POST para /api/upload");
-
   const body = await req.json();
-  const { image, customerId, measure_datetime, measure_type } = body;
+  const { image, customerId, measure_datetime, measure_type, publicImageUrl } =
+    body;
 
   if (
     !isValidBase64Image(image) ||
@@ -104,7 +103,7 @@ export async function POST(req: Request) {
       measure_datetime: new Date(measure_datetime),
       measure_type,
       measure_value: measureValue,
-      image_url: "/path/to/saved/image",
+      image_url: publicImageUrl,
       has_confirmed: false,
     },
   });

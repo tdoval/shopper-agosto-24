@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import UploadResult from "@/features/upload/components/UploadResult";
+import { toast } from "@/components/ui/use-toast";
 
 export default function UploadPage() {
   const [uploadData, setUploadData] = useState<{
@@ -81,16 +82,18 @@ export default function UploadPage() {
               customerId: selectedCustomer,
               measure_datetime: new Date().toISOString(),
               measure_type: measureType,
+              publicImageUrl: uploadData.publicImageUrl,
             }),
           });
 
           if (!response.ok) {
             const errorData = await response.json();
-            alert(
-              `Erro: ${
-                errorData.error_description || "Falha ao processar o upload"
-              }`,
-            );
+            toast({
+              title: "Erro",
+              description:
+                errorData.error_description || "Falha ao processar o upload",
+              variant: "destructive",
+            });
             return;
           }
 
@@ -101,14 +104,26 @@ export default function UploadPage() {
             measureUUID: data.measureUUID,
             measureValue: data.measureValue,
           }));
+          toast({
+            title: "Sucesso",
+            description: "Upload e processamento bem-sucedidos!",
+            variant: "default",
+          });
         } catch (error) {
           console.error("Erro ao enviar os dados:", error);
-          alert("Erro ao conectar com o servidor.");
+          toast({
+            title: "Erro",
+            description: "Erro ao conectar com o servidor.",
+            variant: "destructive",
+          });
         }
       } else {
-        alert(
-          "Por favor, selecione um cliente, o tipo de medida e faça o upload da imagem.",
-        );
+        toast({
+          title: "Erro",
+          description:
+            "Por favor, selecione um cliente, o tipo de medida e faça o upload da imagem.",
+          variant: "destructive",
+        });
       }
     });
   };
