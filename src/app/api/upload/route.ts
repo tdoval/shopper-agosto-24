@@ -10,13 +10,6 @@ export async function POST(req: Request) {
   const body = await req.json();
   const { image, customerId, measure_datetime, measure_type } = body;
 
-  console.log("Dados recebidos:", {
-    image,
-    customerId,
-    measure_datetime,
-    measure_type,
-  });
-
   if (
     !isValidBase64Image(image) ||
     !customerId ||
@@ -57,28 +50,46 @@ export async function POST(req: Request) {
   };
 
   const measureValue = await fetchGoogleGemini(geminiData);
-  console.log("Valor da medição obtido:", measureValue);
+  if (!measureValue) {
+    console.log("Erro ao processar a imagem.");
+    return NextResponse.json(
+      {
+        error_code: "INVALID_DATA",
+        error_description: "Erro ao processar a imagem.",
+      },
+      { status: 400 },
+    );
+  } else if (measureValue === -1) {
+    console.log("Não foi possível determinar o valor da medição.");
+    return NextResponse.json(
+      {
+        error_code: "INVALID_DATA",
+        error_description: "Não foi possível determinar o valor da medição.",
+      },
+      { status: 400 },
+    );
+  }
 
-  const measureUUID = uuidv4();
   console.log("Salvando leitura no banco de dados...");
+
+  let measure_uuid = uuidv4();
 
   await prisma.measure.create({
     data: {
-      id: measureUUID,
-      measure_uuid: measureUUID,
+      id: uuidv4(),
+      measure_uuid,
       customerId: customer.id,
       measure_datetime: new Date(measure_datetime),
       measure_type,
-      measure_value: 1234,
-      image_url: "/path/to/saved/image", // Ajuste conforme necessário
+      measure_value: measureValue,
+      image_url: "/path/to/saved/image",
       has_confirmed: false,
     },
   });
 
   console.log("Leitura salva com sucesso. Enviando resposta...");
   return NextResponse.json({
-    image_url: "/path/to/saved/image", // Ajuste conforme necessário
-    measure_value: 1234,
-    measure_uuid: measureUUID,
+    measureValue: measureValue,
+    measureUUID: measure_uuid,
   });
 }

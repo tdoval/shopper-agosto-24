@@ -19,17 +19,26 @@ export async function POST(req: Request) {
 
   try {
     const tempFileName = `${uuidv4()}-${imageFile.name}`;
-    const tempFilePath = join(process.cwd(), "public", tempFileName);
+    const tempFilePath = join(
+      process.cwd(),
+      "public/upload_images",
+      tempFileName,
+    );
     const buffer = Buffer.from(await imageFile.arrayBuffer());
     await writeFile(tempFilePath, buffer);
 
     const imageBuffer = await readFile(tempFilePath);
     const base64Image = imageBuffer.toString("base64");
 
-    await unlink(tempFilePath);
+    // Criar link para acessra a imagem
+    const publicImageUrl = `/upload_images/${tempFileName}`;
+
+    // await unlink(tempFilePath);
 
     return NextResponse.json({
       base64Image,
+      imageFilePath: tempFilePath,
+      publicImageUrl,
     });
   } catch (error) {
     console.error("Erro ao processar a imagem:", error);

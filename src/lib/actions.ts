@@ -1,38 +1,54 @@
 import prisma from "@/lib/prisma";
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { fetchGoogleGeminiProps } from "./types";
 
 export async function fetchGoogleGemini(data: fetchGoogleGeminiProps) {
-  const { imageBase64, customer_code, measure_datetime, measure_type } = data;
+  const { imageBase64, measure_type } = data;
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({
+    model: "gemini-1.5-flash",
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: SchemaType.ARRAY,
+        items: {
+          type: SchemaType.OBJECT,
+          properties: {
+            measure_value: {
+              type: SchemaType.NUMBER,
+            },
+          },
+        },
+      },
+    },
+  });
 
-  const prompt = `irei fornecer uma imagem em base 64. Essa imagem pode ser a leitura de gás ou leitura de água de um medidor.
-  Também irei fornecer o código do cliente, a data da medição e o tipo de medição. 
-  **Imagem:** ${imageBase64}
-  **Código do Cliente:** ${customer_code}
-  **Data da Medição:** ${measure_datetime}
-  **Tipo de Medição:** ${measure_type}
-  Você deve retornar um JSON com o UUID da medição, o valor da medição e a URL temporária da imagem processada.
-  Exemple: {
-“image_url”: string,
-“measure_value”:integer,
-“measure_uuid”: string
-}
-  Status Code 200.
-  Caso não consiga processar a imagem, retorne um JSON com o erro e o status HTTP 400.
-  {
-"error_code": "INVALID_DATA",
-"error_description": <descrição do
-erro>
-}
+  console.log("Tipo de Medição:", measure_type);
+  const prompt = `
+irei fornecer uma imagem em base 64 de uma leitura de medidor (gás ou água). A imagem pode estar em diferentes formatos (JPEG, PNG, etc.). 
+**Imagem:** ${imageBase64}
+**Tipo de Medição:** ${measure_type}
+
+* **measure_value:** Valor da medição em **litros** (para água) ou **metros cúbicos** (para gás)
+
+**Se o valor da medição não estiver claro na imagem, estime o valor mais próximo.**
+
+* Caso não consiga processar a imagem retorne **measure_value** como -1
 `;
 
   const result = await model.generateContent(prompt);
 
-  console.log(result);
-  return result;
+  console.log("Resposta do Gemini:", result.response.text());
+
+  try {
+    const measurementData = JSON.parse(result.response.text());
+    const measurementValue = parseFloat(measurementData[0].measure_value);
+    return measurementValue;
+  } catch (error) {
+    console.error("Erro ao processar a resposta:", error);
+    return -1;
+  }
 }
 
 export async function findCustomerById(customer_id: string) {

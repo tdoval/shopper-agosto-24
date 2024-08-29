@@ -5,7 +5,11 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 
 interface ImageUploaderProps {
-  onUploadComplete: (data: { base64Image: string }) => void;
+  onUploadComplete: (data: {
+    base64Image: string;
+    imageFilePath: string;
+    publicImageUrl: string;
+  }) => void;
 }
 
 export default function ImageUploader({

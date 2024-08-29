@@ -1,11 +1,9 @@
 interface UploadResultProps {
-  imageUrl: string;
-  measureValue: number;
-  measureUuid: string;
+  measureValue: number | null;
+  measureUuid: string | null;
 }
 
 export default function UploadResult({
-  imageUrl,
   measureValue,
   measureUuid,
 }: UploadResultProps) {
@@ -18,13 +16,6 @@ export default function UploadResult({
       <p>
         <strong>UUID da Medida:</strong> {measureUuid}
       </p>
-      <div className="mt-4">
-        <img
-          src={imageUrl}
-          alt="Imagem do Medidor"
-          className="rounded-lg shadow-sm"
-        />
-      </div>
     </div>
   );
 }

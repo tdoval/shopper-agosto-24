@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import ImageUploader from "@/features/upload/components/ImageUploader";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,21 +10,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import UploadResult from "@/features/upload/components/UploadResult";
 
 export default function UploadPage() {
   const [uploadData, setUploadData] = useState<{
     selectedCustomer: string | null;
+    measureUUID: string | null;
     measureType: string | null;
+    measureValue: number | null;
     base64Image: string | null;
+    imageFilePath: string | null;
+    publicImageUrl: string | null;
   }>({
     selectedCustomer: null,
+    measureUUID: null,
     measureType: null,
+    measureValue: null,
     base64Image: null,
+    imageFilePath: null,
+    publicImageUrl: null,
   });
 
   const [customers, setCustomers] = useState<{ id: string; name: string }[]>(
     [],
   );
+
+  const [isPending, startTransition] = useTransition();
+  const isLoading = isPending;
 
   useEffect(() => {
     async function fetchCustomers() {
@@ -36,55 +48,69 @@ export default function UploadPage() {
     fetchCustomers();
   }, []);
 
-  const handleUploadComplete = (data: { base64Image: string }) => {
+  useEffect(() => {
+    console.log("Dados atualizados:", uploadData);
+  }, [uploadData]);
+
+  const handleUploadComplete = (data: {
+    base64Image: string;
+    imageFilePath: string;
+    publicImageUrl: string;
+  }) => {
     setUploadData((prev) => ({
       ...prev,
       base64Image: data.base64Image,
+      imageFilePath: data.imageFilePath,
+      publicImageUrl: data.publicImageUrl,
     }));
   };
 
-  const handleSubmit = async () => {
-    const { selectedCustomer, measureType, base64Image } = uploadData;
+  const handleSubmit = () => {
+    startTransition(async () => {
+      const { selectedCustomer, measureType, base64Image } = uploadData;
 
-    if (selectedCustomer && measureType && base64Image) {
-      console.log("Customer ID:", selectedCustomer);
-      console.log("Measure Type:", measureType);
-      console.log("Base64 Image:", base64Image);
+      if (selectedCustomer && measureType && base64Image) {
+        try {
+          const response = await fetch("/api/upload", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              image: base64Image,
+              customerId: selectedCustomer,
+              measure_datetime: new Date().toISOString(),
+              measure_type: measureType,
+            }),
+          });
 
-      try {
-        const response = await fetch("/api/upload", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            image: base64Image,
-            customerId: selectedCustomer,
-            measure_datetime: new Date().toISOString(),
-            measure_type: measureType,
-          }),
-        });
+          if (!response.ok) {
+            const errorData = await response.json();
+            alert(
+              `Erro: ${
+                errorData.error_description || "Falha ao processar o upload"
+              }`,
+            );
+            return;
+          }
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          alert(
-            `Erro: ${
-              errorData.error_description || "Falha ao processar o upload"
-            }`,
-          );
-          return;
+          const data = await response.json();
+          console.log("Upload bem-sucedido:", data);
+          setUploadData((prev) => ({
+            ...prev,
+            measureUUID: data.measureUUID,
+            measureValue: data.measureValue,
+          }));
+        } catch (error) {
+          console.error("Erro ao enviar os dados:", error);
+          alert("Erro ao conectar com o servidor.");
         }
-
-        const data = await response.json();
-        console.log("Upload bem-sucedido:", data);
-        // @TODO: lidar com resposta do backend
-      } catch (error) {
-        console.error("Erro ao enviar os dados:", error);
-        alert("Erro ao conectar com o servidor.");
+      } else {
+        alert(
+          "Por favor, selecione um cliente, o tipo de medida e faça o upload da imagem.",
+        );
       }
-    } else {
-      alert("Please select a customer, measure type, and upload an image.");
-    }
+    });
   };
 
   return (
@@ -130,8 +156,26 @@ export default function UploadPage() {
 
       <ImageUploader onUploadComplete={handleUploadComplete} />
 
-      <Button onClick={handleSubmit} className="w-full mt-6">
-        Confirmar Upload
+      {uploadData.publicImageUrl && (
+        <img
+          src={uploadData.publicImageUrl}
+          alt="Imagem do Medidor"
+          className="rounded-lg shadow-sm"
+        />
+      )}
+      {uploadData.measureValue !== null && (
+        <UploadResult
+          measureValue={uploadData.measureValue}
+          measureUuid={uploadData.measureUUID}
+        />
+      )}
+
+      <Button
+        onClick={handleSubmit}
+        className="w-full mt-6"
+        disabled={isLoading}
+      >
+        {isLoading ? "Processando..." : "Confirmar Upload"}
       </Button>
     </div>
   );
