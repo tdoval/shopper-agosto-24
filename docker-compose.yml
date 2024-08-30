@@ -17,6 +17,7 @@ services:
     build: .
     command: >
       sh -c "
+      bunx prisma generate &&
       bunx prisma migrate deploy &&
       bun run seed &&
       bun run dev
