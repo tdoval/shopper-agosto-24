@@ -29,10 +29,9 @@ cd shopper-agosto-24
 ### 2. Configure as variáveis de ambiente
 
 - Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis de ambiente:
-- Criei um usuário exclusivo para vocês. Também o coloquei no .env.example. O banco está pré-configurado para que vocês o utilizem.
 
 ```bash
-DATABASE_URL="postgresql://shopperuserteste:senha8877MNPQ@51.89.241.131/shopper-exclusive-teste"
+DATABASE_URL="postgresql://usuario:senha@server/db"
 GEMINI_API_KEY="sua_chave_de_api"
 ```
 
