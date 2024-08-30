@@ -31,7 +31,7 @@ cd shopper-agosto-24
 - Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis de ambiente:
 
 ```bash
-DATABASE_URL="postgresql://usuario:senha@server/db"
+DATABASE_URL="postgresql://shopperuserteste:senha8877MNPQ@db:5432/shopper-tda"
 GEMINI_API_KEY="sua_chave_de_api"
 ```
 
@@ -40,7 +40,7 @@ GEMINI_API_KEY="sua_chave_de_api"
 Contêineres da aplicação e do banco de dados
 
 ```bash
-docker-compose up -d
+docker-compose up --build
 ```
 
 ### 4. Acessar o Projeto

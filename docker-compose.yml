@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_USER: shopperuserteste
       POSTGRES_PASSWORD: senha8877MNPQ
-      POSTGRES_DB: shopper-exclusive-teste
+      POSTGRES_DB: shopper-tda
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -17,12 +17,12 @@ services:
     build: .
     command: >
       sh -c "
-      npx prisma generate &&
+      npx prisma migrate deploy &&
       npm run seed &&
       npm run dev
       "
     environment:
-      DATABASE_URL: "postgresql://shopperuserteste:senha8877MNPQ@db:5432/shopper-exclusive-teste"
+      DATABASE_URL: "postgresql://shopperuserteste:senha8877MNPQ@db:5432/shopper-tda"
     ports:
       - "3000:3000"
     depends_on:
