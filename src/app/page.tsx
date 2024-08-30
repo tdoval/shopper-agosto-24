@@ -28,7 +28,7 @@ export default function HomePage() {
         </div>
 
         <div className="text-center">
-          <Link href="/list-measurements">
+          <Link href="/customers/measurements">
             <Button className="w-64 mb-2">Listar Medições</Button>
           </Link>
           <p className="text-gray-700">

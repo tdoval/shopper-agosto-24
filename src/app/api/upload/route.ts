@@ -9,9 +9,7 @@ import {
 } from "@/lib/actions";
 
 export async function POST(req: Request) {
-  console.log("Recebendo dados da requisição...");
   const body = await req.json();
-  console.log("Dados recebidos:", body);
   const { image, customerId, measure_datetime, measure_type, publicImageUrl } =
     body;
 
@@ -21,7 +19,6 @@ export async function POST(req: Request) {
     !measure_datetime ||
     !measure_type
   ) {
-    console.log("Dados inválidos fornecidos.");
     return NextResponse.json(
       {
         error_code: "INVALID_DATA",
@@ -32,10 +29,8 @@ export async function POST(req: Request) {
   }
 
   let customer_code = "";
-  console.log("Validando cliente...");
   const { customer, error, status } = await findCustomerById(customerId);
   if (error || !customer) {
-    console.log("Cliente não encontrado:", customerId);
     return NextResponse.json(
       {
         error_code: error,
@@ -46,7 +41,6 @@ export async function POST(req: Request) {
   }
   customer_code = customer.customer_code;
 
-  console.log("Verificando se já existe uma leitura para este mês...");
   const existingReading = await getCurrentMonthReading(
     customerId,
     new Date(measure_datetime),
@@ -54,7 +48,6 @@ export async function POST(req: Request) {
   );
 
   if (existingReading) {
-    console.log("Leitura duplicada encontrada para o mês atual.");
     return NextResponse.json(
       {
         error_code: "DOUBLE_REPORT",
@@ -64,7 +57,6 @@ export async function POST(req: Request) {
     );
   }
 
-  console.log("Enviando imagem para o Google Gemini...");
   const geminiData = {
     imageBase64: image,
     customer_code,
@@ -74,7 +66,6 @@ export async function POST(req: Request) {
 
   const measureValue = await fetchGoogleGemini(geminiData);
   if (!measureValue) {
-    console.log("Erro ao processar a imagem.");
     return NextResponse.json(
       {
         error_code: "INVALID_DATA",
@@ -83,7 +74,6 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   } else if (measureValue === -1) {
-    console.log("Não foi possível determinar o valor da medição.");
     return NextResponse.json(
       {
         error_code: "INVALID_DATA",
@@ -92,8 +82,6 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-
-  console.log("Salvando leitura no banco de dados...");
 
   let measure_uuid = uuidv4();
 
@@ -110,7 +98,6 @@ export async function POST(req: Request) {
     },
   });
 
-  console.log("Leitura salva com sucesso. Enviando resposta...");
   return NextResponse.json({
     measureValue: measureValue,
     measureUUID: measure_uuid,

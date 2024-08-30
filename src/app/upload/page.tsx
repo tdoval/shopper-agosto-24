@@ -49,10 +49,6 @@ export default function UploadPage() {
     fetchCustomers();
   }, []);
 
-  useEffect(() => {
-    console.log("Dados atualizados:", uploadData);
-  }, [uploadData]);
-
   const handleUploadComplete = (data: {
     base64Image: string;
     imageFilePath: string;
@@ -98,7 +94,6 @@ export default function UploadPage() {
           }
 
           const data = await response.json();
-          console.log("Upload bem-sucedido:", data);
           setUploadData((prev) => ({
             ...prev,
             measureUUID: data.measureUUID,

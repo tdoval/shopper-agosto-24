@@ -25,7 +25,6 @@ export async function fetchGoogleGemini(data: fetchGoogleGeminiProps) {
     },
   });
 
-  console.log("Tipo de Medição:", measure_type);
   const prompt = `
 irei fornecer uma imagem em base 64 de uma leitura de medidor (gás ou água). A imagem pode estar em diferentes formatos (JPEG, PNG, etc.). 
 **Imagem:** ${imageBase64}
@@ -39,8 +38,6 @@ irei fornecer uma imagem em base 64 de uma leitura de medidor (gás ou água). A
 `;
 
   const result = await model.generateContent(prompt);
-
-  console.log("Resposta do Gemini:", result.response.text());
 
   try {
     const measurementData = JSON.parse(result.response.text());
