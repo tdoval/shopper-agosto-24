@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Sistema de Medições
 
-## Getting Started
+Este é um sistema para gerenciamento de medições, permitindo upload de imagens de medidores, correção de leituras e listagem de medições realizadas.
 
-First, run the development server:
+## Tecnologias Utilizadas
+
+- **Next.js**: Framework React para aplicações web.
+- **Prisma**: ORM utilizado para interagir com o banco de dados PostgreSQL.
+- **PostgreSQL**: Banco de dados relacional.
+- **Tailwind CSS**: Framework CSS para estilização.
+- **ShadcnUI**: Biblioteca de componentes UI.
+- **Bun**: Gerenciador de pacotes e runtime para executar o projeto.
+- **Docker**: Para criação e gerenciamento de contêineres.
+
+## Requisitos
+
+- **Docker** (v20.10 ou superior)
+- **Docker Compose** (v1.27 ou superior)
+
+## Instalação
+
+### 1. Clone o Repositório
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/tdoval/shopper-agosto-24.git
+cd shopper-agosto-24
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configure as variáveis de ambiente
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis de ambiente:
+- Criei um usuário exclusivo para vocês. Também o coloquei no .env.example. O banco está pré-configurado para que vocês o utilizem.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+```bash
+DATABASE_URL="postgresql://shopperuserteste:senha8877MNPQ@51.89.241.131/shopper-exclusive-teste"
+GEMINI_API_KEY="sua_chave_de_api"
+```
 
-## Learn More
+### 3. Configuração usando Docker
 
-To learn more about Next.js, take a look at the following resources:
+Contêineres da aplicação e do banco de dados
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+docker-compose up -d
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+### 4. Acessar o Projeto
 
-## Deploy on Vercel
+Após executar os comandos acima, o projeto estará disponível em **http://localhost:3000.**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Funcionalidades
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+### Upload de Imagem e Processamento LLM
+
+Permite o upload de uma imagem do medidor e processamento automático da leitura.
+
+### Correção de Medições
+
+Corrija ou confirme as leituras feitas pelo sistema
+
+### Listar Medições
+
+Visualize todas as medições realizadas, filtrando por cliente ou tipo de medição.
