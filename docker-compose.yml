@@ -17,9 +17,9 @@ services:
     build: .
     command: >
       sh -c "
-      npx prisma migrate deploy &&
-      npm run seed &&
-      npm run dev
+      bunx prisma migrate deploy &&
+      bun run seed &&
+      bun run dev
       "
     environment:
       DATABASE_URL: "postgresql://shopperuserteste:senha8877MNPQ@db:5432/shopper-tda"
