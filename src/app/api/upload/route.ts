@@ -99,6 +99,7 @@ export async function POST(req: Request) {
   });
 
   return NextResponse.json({
+    imageUrl: publicImageUrl,
     measureValue: measureValue,
     measureUUID: measure_uuid,
   });
